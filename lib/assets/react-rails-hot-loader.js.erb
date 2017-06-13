@@ -16,6 +16,7 @@ var ReactRailsHotLoader = {
     this._socket.onclose =  function() { _this.log("disconnected") }
 
     this._socket.onmessage = function(message) {
+      clearTimeout(_this.interval)
       var changes = JSON.parse(message.data)
       if (changes.bankrupt) {
         _this._handleBankrupt(changes)
@@ -24,18 +25,20 @@ var ReactRailsHotLoader = {
       }
     }
 
-    this._interval = setInterval(function() {
+    this.runOnce = function() {
       if (_this._socket.readyState == WebSocket.OPEN) {
         _this._socket.send(_this.since)
       } else {
         _this.log("WebSocket not ready, readyState: " + _this._socket.readyState)
       }
-    }, 1500)
+    }
+
+    this.interval = setInterval(this.runOnce, 1500)
   },
 
   stop: function() {
     this._socket.close()
-    clearInterval(this._interval)
+    clearTimeout(this.interval)
   },
 
   _resetSince: function() {
@@ -72,6 +75,7 @@ var ReactRailsHotLoader = {
     })
     ReactRailsUJS.mountComponents()
     this._resetSince()
+    this.interval = setInterval(this.runOnce, 1500);
     this.log("update finished")
   },
 
