@@ -11,11 +11,14 @@ module React
           @port = port
           @change_set_class = change_set_class
           @processed_msg = Hash.new
+          @started = false
         end
 
         # Restarts the server _if_ it has stopped
         def restart
+          return if @started
           start
+          @started = true
         rescue StandardError => err
           if err.message =~ /no acceptor/
             React::Rails::HotLoader.log("WS server is already running (#{ws_url})")
